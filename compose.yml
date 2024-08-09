@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    ports:
+      - ${WSRS_DATABASE_PORT:-5432}:5432 
+      # ${} sets environment variables. WSRS = WebSockets Rocketseat. 
+      # :-5432 uses port 5432 when the env variable is not set.
+    environment:
+      POSTGRES_USER: ${WSRS_DATABASE_USER}
+      POSTGRES_PASSWORD: ${WSRS_DATABASE_PASSWORD}
+      POSTGRES_DB: ${WSRS_DATABASE_NAME}
+    volumes: # use the volume in our service.
+      - db:/var/lib/postgresql/data # here, we set which directory in the filesystem should be cloned into our local directory.
+  
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    restart: unless-stopped
+    depends_on:
+      - db
+    ports:
+      - 8081:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    volumes:
+      - pgadmin:/var/lib/ppgadmin # default location where pgadmin saves its files
+
+
+# Volumes: Whenever we kill a container in docker, anything written in the filesystem there is lost. Dealing with DBs, that's not very good, so we use
+# 'volumes' to persist all this data locally, linking the container's filesystem with our local one.
+volumes:
+  db:
+    driver: local # could be s3, google drive, etc., anything that could store files.
+  pgadmin:
+    driver: local
